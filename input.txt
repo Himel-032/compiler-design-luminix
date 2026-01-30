@@ -1,0 +1,12 @@
+#Import
+Number x = 10;
+Decimal y = 3.14;
+Check (x > 5) {
+    Show("x is greater than 5");
+}
+Repeat (i = 0; i < 5; i++) {
+    Show(i);
+}
+## This is a single-line comment
+#* This is
+   a multi-line comment *#
