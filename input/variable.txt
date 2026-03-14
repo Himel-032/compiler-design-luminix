@@ -1,0 +1,145 @@
+
+#Attach <stdio.h>
+
+StartExam(){
+
+    ## ---------------- VARIABLES ----------------
+
+    Number a = 10;
+    Number b = 20;
+    Number c;
+
+    Decimal x = 5.5;
+    LargeDecimal y = 2.345;
+
+    Letter ch;
+    ch = 'A';
+
+    TrueFalse flag = False;
+
+    ## arithmetic assignment
+    c = a + b;
+
+    ## ---------------- PRINT VARIABLES ----------------
+
+    Show("Value of a:");
+    Show(a);
+
+    Show("Value of b:");
+    Show(b);
+
+    Show("Value of c:");
+    Show(c);
+
+    Show("Value of x:");
+    Show(x);
+
+    Show("Value of y:");
+    Show(y);
+
+    Show("Character value:");
+    Show(ch);
+
+    Show("Boolean flag:");
+    Show(flag);
+
+    ## ---------------- EXPRESSIONS ----------------
+
+    Number exp1;
+    Number exp2;
+
+    exp1 = a * b + 5;
+    exp2 = (a + b) * 2;
+
+    Show("Expression 1 result:");
+    Show(exp1);
+
+    Show("Expression 2 result:");
+    Show(exp2);
+
+
+    ## ---------------- MATH FUNCTIONS ----------------
+
+    Number powerVal;
+    Number rootVal;
+    Number absVal;
+
+    powerVal = Power(2,3);
+    rootVal = Root(16);
+    absVal = Absolute(-25);
+
+    Show("Power value:");
+    Show(powerVal);
+
+    Show("Root value:");
+    Show(rootVal);
+
+    Show("Absolute value:");
+    Show(absVal);
+
+
+    ## ---------------- ARRAY ----------------
+
+    Number arr[5];
+
+    arr[0] = 5;
+    arr[1] = 10;
+    arr[2] = 15;
+    arr[3] = 20;
+    arr[4] = 25;
+
+    Show("Array element 0:");
+    Show(arr[0]);
+
+    Show("Array element 1:");
+    Show(arr[1]);
+
+    Show("Array element 2:");
+    Show(arr[2]);
+
+    Show("Array element 3:");
+    Show(arr[3]);
+
+    Show("Array element 4:");
+    Show(arr[4]);
+
+
+    ## ---------------- ARRAY EXPRESSIONS ----------------
+
+    Number sum;
+
+    sum = arr[0] + arr[1] + arr[2];
+
+    Show("Array sum:");
+    Show(sum);
+
+    ## 2D array 
+
+    Decimal matrix[2][3];
+    matrix[0][0] = 1;
+    matrix[0][1] = 2;
+    matrix[0][2] = 3;
+    matrix[1][2] = 20;
+
+    Show(matrix[0][1]);
+    Show(matrix[1][2]);
+
+    Show("Program finished successfully");
+
+    Positive m = 10;
+    Show(m);
+    Positive n ;
+    Take(n);
+    Show(n);
+    Show("______");
+    Letter l;
+    Take(l);
+    Show(l);
+
+    Return 0;
+}
+
+## single line comment
+#* 
+    Multi line comment
+*#
