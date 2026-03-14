@@ -1,0 +1,33 @@
+
+#Attach <stdio.h>
+
+StartExam(){
+
+    Number a, b, c, d;
+    a = 1;
+    b = 2;
+    c = 3;
+    d = 500;
+    Check(a==1){ Show("a==1"); }
+Check(a==0){ Show("a==0"); }
+ElseCheck(b==0){ Show("b==0"); }
+Otherwise{
+    Show("Top Otherwise");
+    Check(c==999){ Show("c==999"); }
+    Otherwise{ Show("Nested Otherwise corner case"); }
+}
+Check(a==0){ Show("a==0"); }
+ElseCheck(b==0){ Show("b==0"); }
+Otherwise{
+    Show("Top Otherwise");
+    Check(c==999){ Show("c==999"); }
+    Otherwise{ Show("Nested Otherwise corner case"); }
+}
+
+    Return 0;
+}
+
+## single line comment
+#* 
+    Multi line comment
+*#
