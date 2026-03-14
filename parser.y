@@ -403,28 +403,67 @@ scan_stmt
     ;
 
 /* ---------------- IF ---------------- */
-
 if_stmt
     : IF LPAREN condition RPAREN 
         { 
             $<ival>$ = execute_flag;
-            if(!($3)) execute_flag = 0; 
+            if (execute_flag) {
+                if ($3) {
+                    /* execute this block */
+                } else {
+                    execute_flag = 0;
+                }
+            }
         }
-      LBRACE statement_list RBRACE else_part
+      LBRACE statement_list RBRACE
+        {
+            if ($<ival>5) {
+                if ($3) {
+                    execute_flag = 0; /* block ran, skip rest of chain */
+                } else {
+                    execute_flag = 1; /* didn't run, check next block */
+                }
+            } else {
+                execute_flag = 0; /* were already skipping */
+            }
+        }
+      else_if_part
         { 
             execute_flag = $<ival>5; 
         }
     ;
 
-else_part
-    : ELSE 
-        { 
-            if(execute_flag == 0) execute_flag = 1;
-            else execute_flag = 0;
+else_if_part
+    : ELSEIF LPAREN condition RPAREN 
+        {
+            /* remember state before this block */
+            $<ival>$ = execute_flag;
+            if (execute_flag) {
+                if ($3) {
+                    /* execute this */
+                } else {
+                    execute_flag = 0;
+                }
+            }
         }
       LBRACE statement_list RBRACE
+        {
+            /* state before ELSEIF block is in $<ival>5 */
+            if ($<ival>5) {
+                if ($3) {
+                    execute_flag = 0; /* this ran, skip later parts */
+                } else {
+                    execute_flag = 1; /* this didn't run, search next parts */
+                }
+            } else {
+                execute_flag = 0; /* were already skipping whole chain */
+            }
+        }
+      else_if_part 
+    | ELSE LBRACE statement_list RBRACE
     | /* empty */
     ;
+
 
 /* ---------------- CONDITION ---------------- */
 
