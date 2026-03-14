@@ -1,12 +1,21 @@
-#Import
-Number x = 10;
-Decimal y = 3.14;
-Check (x > 5) {
-    Show("x is greater than 5");
+
+#Attach <stdio.h>
+
+StartExam(){
+
+    Number a = 5;
+    Check(a>3){
+        Show("Check");
+    }ElseCheck(a<5){
+        Show("ElseCheck");
+    }
+    Otherwise{
+        Show("Otherwise");
+    }
+    Return 0;
 }
-Repeat (i = 0; i < 5; i++) {
-    Show(i);
-}
-## This is a single-line comment
-#* This is
-   a multi-line comment *#
+
+## single line comment
+#* 
+    Multi line comment
+*#
