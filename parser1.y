@@ -6,50 +6,6 @@
 #include <string.h>
 #include <math.h>
 
-#define SWITCH_STACK_MAX 64
-#define SWITCH_EPSILON 1e-9
-typedef struct {
-    double value;       /* the switch expression value          */
-    int matched;     /* 1 = a case has already matched       */
-    int done;        /* 1 = break was hit, skip rest         */
-    int outer_exec;  /* saved execute_flag before this switch */
-} SwitchFrame;
-
-SwitchFrame switch_stack[SWITCH_STACK_MAX];
-int switch_top = -1;   /* index of current (innermost) frame  */
-
-int break_flag = 0;    /* set by break; cleared after use     */
-/* helpers */
-void switch_push(double val, int outer_exec) {
-    if (switch_top + 1 >= SWITCH_STACK_MAX) {
-        fprintf(stderr, "Runtime error: switch nesting too deep\n");
-        return;
-    }
-    switch_top++;
-    switch_stack[switch_top].value      = val;
-    switch_stack[switch_top].matched    = 0;
-    switch_stack[switch_top].done       = 0;
-    switch_stack[switch_top].outer_exec = outer_exec;
-}
-
-void switch_pop(void) {
-    if (switch_top < 0) {
-        fprintf(stderr, "Runtime error: switch stack underflow\n");
-        return;
-    }
-    switch_top--;
-}
-
-SwitchFrame *switch_cur(void) {
-    /* returns pointer to innermost active switch frame */
-    if (switch_top < 0) return NULL;
-    return &switch_stack[switch_top];
-}
-
-int sw_match(double a, double b) {
-    return fabs(a - b) < SWITCH_EPSILON;
-}
-
 void yyerror(const char *s);
 int yylex(void);
 extern int yylineno;
@@ -229,11 +185,10 @@ double get_symbol(char *name){
 
 %token BIT_AND BIT_OR BIT_XOR BIT_NOT SHL SHR
 
-%token SEMI COMMA COLON
+%token SEMI COMMA
 %token LPAREN RPAREN
 %token LBRACE RBRACE
 %token LBRACKET RBRACKET
-%token RANGE
 
 %token <ival> INT_LITERAL
 %token <fval> FLOAT_LITERAL
@@ -242,7 +197,6 @@ double get_symbol(char *name){
 %token <sval> IDENTIFIER
 
 %type <dval> expression term factor primary condition function_call array_access
-
 %type <ival> array_size
 
 %left OR
@@ -287,8 +241,6 @@ statement
     | print_stmt
     | scan_stmt
     | if_stmt
-    | switch_stmt
-    | BREAK SEMI  { if(execute_flag) break_flag = 1; }
     | loop_stmt
     | return_stmt SEMI
     ;
@@ -451,7 +403,6 @@ scan_stmt
     ;
 
 /* ---------------- IF ---------------- */
-
 if_stmt
     : IF LPAREN condition RPAREN 
         { 
@@ -513,133 +464,6 @@ else_if_part
     | /* empty */
     ;
 
-    /* ===================== SWITCH-CASE ===================== */
-
-switch_stmt
-    : SWITCH LPAREN expression RPAREN
-        {
-            /*
-             * Push a new frame onto the switch stack.
-             * outer_exec = current execute_flag so we can
-             * restore it exactly when the switch ends.
-             */
-            switch_push($3, execute_flag);
-
-            if (execute_flag) {
-                /* start with execute_flag = 0; each case
-                   will turn it on/off as needed            */
-                execute_flag = 0;
-            } else {
-                /* we are inside a skipped block — mark
-                   the whole switch as already done so
-                   every case/default is skipped too        */
-                switch_cur()->done = 1;
-            }
-        }
-      LBRACE case_list RBRACE
-        {
-            /* restore the execution context that was active
-               before this switch statement                  */
-            execute_flag = switch_cur()->outer_exec;
-            switch_pop();
-            break_flag = 0;   /* consume any leftover break */
-        }
-    ;
-/* ---- list of case clauses ---- */
-case_list
-    : case_list case_item
-    | case_list default_item
-    | /* empty */
-    ;
-
-case_item
-    : CASE case_expr COLON
-        {
-            /* case_expr already set execute_flag appropriately */
-        }
-      statement_list
-        {
-            SwitchFrame *f = switch_cur();
-            if (f && break_flag && execute_flag) {
-                f->done      = 1;
-                execute_flag = 0;
-                break_flag   = 0;
-            }
-        }
-    ;
-
-case_expr
-    : expression
-        {
-            SwitchFrame *f = switch_cur();
-            if (f == NULL) {
-                yyerror("case outside switch");
-                execute_flag = 0;
-            } else if (f->done) {
-                execute_flag = 0;
-            } else if (f->matched) {
-                execute_flag = 1;
-            } else if (fabs(f->value - $1) < SWITCH_EPSILON) {
-                f->matched   = 1;
-                execute_flag = 1;
-            } else {
-                execute_flag = 0;
-            }
-        }
-    | expression RANGE expression
-        {
-            SwitchFrame *f = switch_cur();
-            if (f == NULL) {
-                yyerror("case outside switch");
-                execute_flag = 0;
-            } else if (f->done) {
-                execute_flag = 0;
-            } else if (f->matched) {
-                execute_flag = 1;
-            } else {
-                int start = (int)$1;
-                int end = (int)$3;
-                int val = (int)f->value;
-                
-                if (val >= start && val <= end) {
-                    f->matched   = 1;
-                    execute_flag = 1;
-                } else {
-                    execute_flag = 0;
-                }
-            }
-        }
-    ;
-
-
-default_item
-    : DEFAULT COLON
-        {
-            SwitchFrame *f = switch_cur();
-            if (f == NULL) {
-                yyerror("default outside switch");
-                execute_flag = 0;
-            } else if (f->done) {
-                /* break was hit earlier */
-                execute_flag = 0;
-            } else if (f->matched) {
-                /* falling through from a previous case (no break) */
-                execute_flag = 1;
-            } else {
-                /* no case matched at all — default is the entry point */
-                execute_flag = 1;
-            }
-        }
-      statement_list
-        {
-            SwitchFrame *f = switch_cur();
-            if (f && break_flag && execute_flag) {
-                f->done      = 1;
-                execute_flag = 0;
-                break_flag   = 0;
-            }
-        }
-    ;
 
 /* ---------------- CONDITION ---------------- */
 
